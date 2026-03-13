@@ -13,25 +13,30 @@ app.get("/hi", (req, res) => {
 });
 
 app.post("/askAI", async (req, res) => {
-  const { prompt } = req.body;
+  try {
+    const { prompt } = req.body;
 
-  if (!prompt) {
-    return res.status(404).json({ message: "Enter valid string" });
+    if (!prompt) {
+      return res.status(404).json({ message: "Enter valid string" });
+    }
+
+    async function main() {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+      return response.text;
+    }
+
+    const api_response = await main();
+    console.log(api_response);
+    return res
+      .status(201)
+      .json({ message: "your response is ready", data: api_response });
+  } catch (error) {
+    console.log(error);
+    return res.json({ message: error });
   }
-
-  async function main() {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-    });
-    return response.text;
-  }
-
-  const api_response = await main();
-  console.log(api_response);
-  return res
-    .status(201)
-    .json({ message: "your response is ready", data: api_response });
 });
 
 app.listen(process.env.port, () => {
