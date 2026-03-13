@@ -1,14 +1,39 @@
+import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
+import express from "express";
+const app = express();
 
 // The client gets the API key from the environment variable `GEMINI_API_KEY`.
-const ai = new GoogleGenAI(process.env.API_KEY);
+const ai = new GoogleGenAI(process.env.Gemini_API_Key);
 
-async function main() {
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: "Explain how AI works in a few words",
-  });
-  console.log(response.text);
-}
+app.use(express.json());
 
-main();
+app.get("/hi", (req, res) => {
+  res.send("Say hello to my ai");
+});
+
+app.post("/askAI", async (req, res) => {
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.status(404).json({ message: "Enter valid string" });
+  }
+
+  async function main() {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
+    return response.text;
+  }
+
+  const api_response = await main();
+  console.log(api_response);
+  return res
+    .status(201)
+    .json({ message: "your response is ready", data: api_response });
+});
+
+app.listen(process.env.port, () => {
+  console.log("server running at : ", process.env.port);
+});
